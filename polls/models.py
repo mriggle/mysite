@@ -18,4 +18,11 @@ class Choice(models.Model):
     votes = models.IntegerField(default=0)
     def __str__(self):
         return self.choice_text
+
+class Response(models.Model):
+    username = models.CharField(max_length=150)
+    choice_text = models.CharField(max_length=200)
+    pub_date = models.DateTimeField("date submitted")
+    def __str__(self):
+        return self.username + " : " + self.choice_text
     
