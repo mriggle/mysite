@@ -1,6 +1,8 @@
 from django.db import models
 import datetime
 from django.utils import timezone
+from django.contrib.auth.models import User
+
 
 
 class Question(models.Model):
@@ -20,9 +22,8 @@ class Choice(models.Model):
         return self.choice_text
 
 class Response(models.Model):
-    username = models.CharField(max_length=150)
-    choice_text = models.CharField(max_length=200)
-    pub_date = models.DateTimeField("date submitted")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    choice = models.ForeignKey(Choice, on_delete=models.CASCADE)
+    date = models.DateTimeField("submition date")
     def __str__(self):
         return self.username + " : " + self.choice_text
-    
