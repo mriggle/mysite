@@ -2,11 +2,12 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views import generic
-from .models import Choice, Question
+from .models import Choice, Question, Response
 from django.utils import timezone
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
 from django.shortcuts import redirect
+from datetime import datetime
 
 
 class IndexView(LoginRequiredMixin, generic.ListView):
@@ -35,6 +36,12 @@ class ResultsView(LoginRequiredMixin, generic.DetailView):
     model = Question
     template_name = "polls/results.html"
 
+    question = Question
+
+    votes = Response.objects.filter(question__name=question).count()
+
+
+
 def vote(request, question_id):
     if not request.user.is_authenticated:
         return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
@@ -53,9 +60,6 @@ def vote(request, question_id):
             },
         )
     else:
-        selected_choice.votes += 1
-        selected_choice.save()
-        # Always return an HttpResponseRedirect after successfully dealing
-        # with POST data. This prevents data from being posted twice if a
-        # user hits the Back button.
+        r = Response(user=request.user, choice=selected_choice, date=timezone.now())
+        r.save()
         return HttpResponseRedirect(reverse("polls:results", args=(question.id,)))
