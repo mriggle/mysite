@@ -7,7 +7,8 @@ from django.utils import timezone
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
 from django.shortcuts import redirect
-from datetime import datetime
+from django.db.models import Count
+
 
 
 class IndexView(LoginRequiredMixin, generic.ListView):
@@ -32,13 +33,29 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         """
         return Question.objects.filter(pub_date__lte=timezone.now())
 
-class ResultsView(LoginRequiredMixin, generic.DetailView):
-    model = Question
-    template_name = "polls/results.html"
+# class ResultsView(LoginRequiredMixin, generic.DetailView):
+#     model = Question
+#     template_name = "polls/results.html"
+#     context_object_name = "votes_list"
+#     def get_queryset(self):
+#         return [1,2,3]
+        # questionObj = get_object_or_404(Question)
+        # # question = Question
+        # # votes = Response.objects.filter(question__name=question).count()
+        # return questionObj.choice_set
+    
 
-    question = Question
+def results(request, question_id):
+    if not request.user.is_authenticated:
+        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+    
+    question = get_object_or_404(Question, pk=question_id)
 
-    votes = Response.objects.filter(question__name=question).count()
+    list = Choice.objects.filter(question=question).annotate(votes=Count("response"))
+
+    context = {"question": question, "list": list}
+    return render(request, "polls/results.html", context)
+
 
 
 

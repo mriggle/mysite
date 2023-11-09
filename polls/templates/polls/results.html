@@ -5,8 +5,8 @@
 <h1>{{ question.question_text }}</h1>
 
 <ul>
-    {% for choice in question.choice_set.all %}
-    <li>{{ choice.choice_text }} -- {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
+    {% for entry in list %}
+    <li>{{ entry.choice_text }} -- {{ entry.votes }}</li>
     {% endfor %}
 </ul>
 
