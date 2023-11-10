@@ -7,61 +7,49 @@ from django.utils import timezone
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
 from django.shortcuts import redirect
-from django.db.models import Count
+from django.db.models import Count, Value, BooleanField
+from django.db import models
 
-
-
-class IndexView(LoginRequiredMixin, generic.ListView):
-    template_name = "polls/index.html"
-    context_object_name = "latest_question_list"
-
-    def get_queryset(self):
-        """
-        Return the last five published questions (not including those set to be
-        published in the future).
-        """
-        return Question.objects.filter(pub_date__lte=timezone.now()).order_by("-pub_date")[
-            :5
-        ]
-
-class DetailView(LoginRequiredMixin, generic.DetailView):
-    model = Question
-    template_name = "polls/detail.html"
-    def get_queryset(self):
-        """
-        Excludes any questions that aren't published yet.
-        """
-        return Question.objects.filter(pub_date__lte=timezone.now())
-
-# class ResultsView(LoginRequiredMixin, generic.DetailView):
-#     model = Question
-#     template_name = "polls/results.html"
-#     context_object_name = "votes_list"
-#     def get_queryset(self):
-#         return [1,2,3]
-        # questionObj = get_object_or_404(Question)
-        # # question = Question
-        # # votes = Response.objects.filter(question__name=question).count()
-        # return questionObj.choice_set
+def index(request):
+    if not request.user.is_authenticated:
+        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
     
+    unanswered = Question.objects.exclude(choice__response__user_id=request.user.id)
+    answered = Question.objects.filter(choice__response__user_id=request.user.id).distinct()
+
+    context = {"answered": answered, "unanswered": unanswered}
+    return render(request, "polls/index.html", context)
+
+def detail(request, question_id):
+    if not request.user.is_authenticated:
+        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+
+    question = get_object_or_404(Question, pk=question_id)
+    return render(request, "polls/detail.html", {"question": question})
 
 def results(request, question_id):
     if not request.user.is_authenticated:
         return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+    if not Response.objects.filter(user=request.user, choice__question_id=question_id).exists():
+        return redirect('../vote')
     
-    question = get_object_or_404(Question, pk=question_id)
+    userChoice = Response.objects.filter(user=request.user, choice__question_id=question_id).choice
 
-    list = Choice.objects.filter(question=question).annotate(votes=Count("response"))
+    question = get_object_or_404(Question, pk=question_id)
+    list = Choice.objects.filter(question=question).annotate(
+        votes=Count("response")
+    )
+
+
 
     context = {"question": question, "list": list}
     return render(request, "polls/results.html", context)
 
-
-
-
 def vote(request, question_id):
     if not request.user.is_authenticated:
         return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+    if Response.objects.filter(user=request.user, choice__question_id=question_id).exists():
+        return redirect('../results')
     
     question = get_object_or_404(Question, pk=question_id)
     try:

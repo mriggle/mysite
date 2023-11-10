@@ -3,9 +3,16 @@
 {% block title %}Latest Questions Index{% endblock %}
 
 {% block content %}
+<strong>unanswered</strong>
 <ul>
-    {% for entry in latest_question_list %}
-    <li><a href="./{{entry.id}}">{{ entry.question_text }}<a></li>
+    {% for entry in unanswered %}
+    <li><a href="./{{entry.id}}">{{ entry.question_text }}</a></li>
+    {% endfor %}
+</ul>
+<strong>answered</strong>
+<ul>
+    {% for entry in answered %}
+    <li><a href="./{{entry.id}}/results">{{ entry.question_text }}</a></li>
     {% endfor %}
 </ul>
 {% endblock %}
