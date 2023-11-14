@@ -33,16 +33,14 @@ def results(request, question_id):
     if not Response.objects.filter(user=request.user, choice__question_id=question_id).exists():
         return redirect('../vote')
     
-    userChoice = Response.objects.filter(user=request.user, choice__question_id=question_id).choice
+    userChoice = Response.objects.filter(user=request.user, choice__question_id=question_id).first().choice
 
     question = get_object_or_404(Question, pk=question_id)
     list = Choice.objects.filter(question=question).annotate(
         votes=Count("response")
     )
 
-
-
-    context = {"question": question, "list": list}
+    context = {"question": question, "list": list, "userChoice": userChoice}
     return render(request, "polls/results.html", context)
 
 def vote(request, question_id):

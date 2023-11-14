@@ -6,9 +6,14 @@
 
 <ul>
     {% for entry in list %}
-    <li>{{ entry.choice_text }} -- {{ entry.votes }}</li>
+    <li>
+        {% if entry == userChoice %} <b> {% endif %}
+
+            {{ entry.choice_text }} -- {{ entry.votes }}
+
+            {% if entry == userChoice%} </b> {% endif %}
+    </li>
     {% endfor %}
 </ul>
 
-<a href="{% url 'polls:detail' question.id %}">Vote again?</a>
 {% endblock %}
